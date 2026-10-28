@@ -22,7 +22,8 @@ TOKENS = {"in": 0, "out": 0, "calls": 0}
 
 
 def codex(prompt, web=False):
-    args = CODEX + ["exec", "--skip-git-repo-check", "-s", "read-only", "--json"]
+    args = CODEX + ["exec", "--skip-git-repo-check", "-s", "read-only", "--json",
+                    "-c", "mcp_servers.sqlcl.enabled=false"]  # no per-agent SQLcl JVM
     if web:
         args += ["-c", "tools.web_search=true"]
     r = subprocess.run(args + [prompt], stdin=subprocess.DEVNULL, capture_output=True, text=True, encoding="utf-8",
