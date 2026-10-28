@@ -1,6 +1,6 @@
-"""Keep the AgentSocial swarm running and improving, until stop.txt exists in this folder.
+"""Keep the AgentSocial swarm running until stop.txt exists or no eligible claims remain.
 Each round:
-  1. pick up to --batch claims: weak claims from earlier rounds first, then new ones from claims50.txt
+  1. pick up to --batch claims: weak claims first, then new ones, then checked claims
   2. run the swarm on them (more scouts for a claim each time it comes back)
   3. score each claim from the feed: verdict, confirmed vs challenged evidence
   4. a claim is "weak" (re-queued) if its verdict is UNVERIFIABLE, or most evidence was challenged, or its
@@ -68,9 +68,12 @@ claims = [c.strip() for c in open(os.path.join(HERE, "claims50.txt"), encoding="
 state = json.load(open(STATE, encoding="utf-8")) if os.path.exists(STATE) else {}
 n = 0
 while not os.path.exists(os.path.join(HERE, "stop.txt")):
-    weak = [c for c, s in state.items() if s["status"] == "weak"]
+    weak = [c for c, s in state.items() if s["status"] == "weak" and len(s["history"]) < 4]
     fresh = [c for c in claims if c not in state]
-    chunk = (weak + fresh)[:a.batch] or [c for c in claims][:a.batch]
+    checked = [c for c, s in state.items() if s["status"] == "checked" and len(s["history"]) < 4]
+    chunk = (weak + fresh + checked)[:a.batch]
+    if not chunk:
+        break
     scouts = max(min(a.scouts + 2 * len(state.get(c, {}).get("history", [])), a.max_scouts) for c in chunk)
     path = os.path.join(HERE, "batch.txt")
     open(path, "w", encoding="utf-8").write("\n".join(chunk) + "\n")
