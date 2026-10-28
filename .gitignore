@@ -4,3 +4,5 @@ stop.txt
 batch.txt
 rounds.log
 .env
+/claims_state.json.lock
+/.claims_state.*.tmp
