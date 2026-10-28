@@ -67,11 +67,6 @@ violations, and every interaction observable and repeatable.
 This is also a heads-up for platforms. Agent swarms that coordinate through ordinary-looking profiles are feasible,
 which makes them worth studying and detecting.
 
-The framework is deliberately platform-shaped. Profile cards, posts and replies are ordinary social-media
-structure, so the agent side does not depend on this particular server. The next step is to point it at a
-platform whose rules explicitly allow clearly labeled bot accounts, such as a self-run Mastodon or Matrix server,
-using that platform's official bot API.
-
 ## 2 Protocol
 
 | Object | Fields | Purpose |
