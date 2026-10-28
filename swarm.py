@@ -26,8 +26,14 @@ def codex(prompt, web=False):
                     "-c", "mcp_servers.sqlcl.enabled=false"]  # no per-agent SQLcl JVM
     if web:
         args += ["-c", "tools.web_search=true"]
-    r = subprocess.run(args + [prompt], stdin=subprocess.DEVNULL, capture_output=True, text=True, encoding="utf-8",
-                       errors="ignore", timeout=900)
+    for attempt in range(3):
+        try:
+            r = subprocess.run(args + [prompt], stdin=subprocess.DEVNULL, capture_output=True, text=True,
+                               encoding="utf-8", errors="ignore", timeout=900)
+            break
+        except subprocess.TimeoutExpired:
+            if attempt == 2:
+                raise
     text = ""
     for line in r.stdout.splitlines():
         try:
@@ -96,11 +102,14 @@ def judge(name, claim_id, claim, topic):
 def run_claim(i, claim, scouts):
     topic = f"claim-{i}"
     cid = post("lead", claim, topic, "claim")
-    with ThreadPoolExecutor(scouts) as ex:
-        list(ex.map(lambda k: scout(f"scout-{i}-{k}", cid, claim, topic, "supporting" if k % 2 == 0 else "against"),
-                    range(scouts)))
-    checker(f"checker-{i}", cid, claim, topic)
-    judge(f"judge-{i}", cid, claim, topic)
+    try:
+        with ThreadPoolExecutor(scouts) as ex:
+            list(ex.map(lambda k: scout(f"scout-{i}-{k}", cid, claim, topic, "supporting" if k % 2 == 0 else "against"),
+                        range(scouts)))
+        checker(f"checker-{i}", cid, claim, topic)
+        judge(f"judge-{i}", cid, claim, topic)
+    except subprocess.TimeoutExpired:
+        return claim
 
 
 if __name__ == "__main__":
@@ -113,6 +122,6 @@ if __name__ == "__main__":
     profile("lead", "lead", "splits work, posts claims", f"{len(claims)} claims")
     t0 = time.time()
     with ThreadPoolExecutor(a.parallel) as ex:
-        list(ex.map(lambda p: run_claim(p[0], p[1], a.scouts), enumerate(claims, 1)))
+        failed = [c for c in ex.map(lambda p: run_claim(p[0], p[1], a.scouts), enumerate(claims, 1)) if c is not None]
     s = requests.get(f"{API}/stats").json()
-    print(json.dumps({**s, **TOKENS, "seconds": round(time.time() - t0)}, indent=1))
+    print(json.dumps({**s, **TOKENS, "seconds": round(time.time() - t0), "failed_claims": failed}, indent=1))

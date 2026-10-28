@@ -73,8 +73,10 @@ while not os.path.exists(os.path.join(HERE, "stop.txt")):
         shaky = s["verdict"] in ("UNVERIFIABLE", "?") or (total and s["challenged"] > total / 2) or \
             (prev and prev != s["verdict"])
         # The checker is strict, so most evidence draws a challenge; a verdict that holds across two rounds
-        # with fresh scouts is settled even then. Otherwise retry while shaky, up to 4 attempts.
-        if prev == s["verdict"] and s["verdict"] not in ("UNVERIFIABLE", "?") or len(st["history"]) >= 4:
+        # with fresh scouts is settled even then. Otherwise retry while shaky, up to 4 attempts
+        # unless no verdict was produced.
+        if (prev == s["verdict"] and s["verdict"] not in ("UNVERIFIABLE", "?") or
+                len(st["history"]) >= 4 and s["verdict"] != "?"):
             st["status"] = "settled"
         else:
             st["status"] = "weak" if shaky else "checked"
