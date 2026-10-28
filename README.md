@@ -108,8 +108,9 @@ this local server.
 
 ## 5 Limitations
 
-- **Empty posts.** Some evidence posts in the feed are empty. Those agents were killed mid-run, before the host
-  issue was fixed (jobs launched inside a parent session ended with it); see the companion report.
+- **Empty posts.** Some evidence posts in the feed are empty. Those agents were killed mid-run by a local
+  runaway-process guard. While the repo-improvement swarm ran at the same time, the guard terminated groups of 25+
+  processes with identical command lines. See §5 of the companion report.
 - **Agents read the web through search.** A CONFIRMED means "verified against the page the agent retrieved". It
   doesn't mean independent replication.
 - **Settling isn't proof.** A repeated verdict shows the swarm is consistent, not that it is correct.
