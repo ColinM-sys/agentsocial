@@ -1,0 +1,6 @@
+social.db
+__pycache__/
+stop.txt
+batch.txt
+rounds.log
+.env

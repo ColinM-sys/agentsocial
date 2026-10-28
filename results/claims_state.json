@@ -1,0 +1,863 @@
+{
+ "Autonomous multi-agent swarms outperform a single strong model on real-world software engineering benchmarks.": {
+  "history": [
+   {
+    "round": 0,
+    "scouts": 4,
+    "verdict": "MISLEADING",
+    "confirmed": 3,
+    "challenged": 1,
+    "thread": 419
+   }
+  ],
+  "status": "checked"
+ },
+ "AI agents can now complete multi-hour software tasks end to end without human help.": {
+  "history": [
+   {
+    "round": 0,
+    "scouts": 4,
+    "verdict": "SUPPORTED",
+    "confirmed": 3,
+    "challenged": 1,
+    "thread": 420
+   }
+  ],
+  "status": "checked"
+ },
+ "Most enterprise AI agent deployments in 2026 deliver measurable ROI.": {
+  "history": [
+   {
+    "round": 0,
+    "scouts": 4,
+    "verdict": "UNVERIFIABLE",
+    "confirmed": 1,
+    "challenged": 3,
+    "thread": 427
+   },
+   {
+    "round": 1,
+    "scouts": 6,
+    "verdict": "UNVERIFIABLE",
+    "confirmed": 4,
+    "challenged": 2,
+    "thread": 526
+   },
+   {
+    "round": 2,
+    "scouts": 8,
+    "verdict": "UNVERIFIABLE",
+    "confirmed": 3,
+    "challenged": 5,
+    "thread": 659
+   },
+   {
+    "round": 3,
+    "scouts": 8,
+    "verdict": "UNVERIFIABLE",
+    "confirmed": 5,
+    "challenged": 3,
+    "thread": 840
+   }
+  ],
+  "status": "settled"
+ },
+ "Open-weight models are within a few points of the best closed models on major reasoning benchmarks.": {
+  "history": [
+   {
+    "round": 0,
+    "scouts": 4,
+    "verdict": "MISLEADING",
+    "confirmed": 4,
+    "challenged": 0,
+    "thread": 426
+   }
+  ],
+  "status": "checked"
+ },
+ "Oracle AI Database 26ai runs vector search and relational SQL in the same query without a separate vector store.": {
+  "history": [
+   {
+    "round": 0,
+    "scouts": 4,
+    "verdict": "SUPPORTED",
+    "confirmed": 4,
+    "challenged": 0,
+    "thread": 423
+   }
+  ],
+  "status": "checked"
+ },
+ "NVIDIA DGX Spark can run a 200B-parameter model locally.": {
+  "history": [
+   {
+    "round": 0,
+    "scouts": 4,
+    "verdict": "SUPPORTED",
+    "confirmed": 3,
+    "challenged": 1,
+    "thread": 421
+   }
+  ],
+  "status": "checked"
+ },
+ "Retrieval-augmented generation eliminates LLM hallucinations.": {
+  "history": [
+   {
+    "round": 0,
+    "scouts": 4,
+    "verdict": "FALSE",
+    "confirmed": 3,
+    "challenged": 1,
+    "thread": 424
+   }
+  ],
+  "status": "checked"
+ },
+ "Small language models under 10B parameters now match GPT-4 class models on coding benchmarks.": {
+  "history": [
+   {
+    "round": 0,
+    "scouts": 4,
+    "verdict": "SUPPORTED",
+    "confirmed": 2,
+    "challenged": 2,
+    "thread": 425
+   }
+  ],
+  "status": "checked"
+ },
+ "AI coding assistants make experienced developers faster on real tasks.": {
+  "history": [
+   {
+    "round": 0,
+    "scouts": 4,
+    "verdict": "MISLEADING",
+    "confirmed": 2,
+    "challenged": 2,
+    "thread": 428
+   }
+  ],
+  "status": "checked"
+ },
+ "Most AI-generated code contains security vulnerabilities.": {
+  "history": [
+   {
+    "round": 0,
+    "scouts": 4,
+    "verdict": "MISLEADING",
+    "confirmed": 4,
+    "challenged": 0,
+    "thread": 422
+   }
+  ],
+  "status": "checked"
+ },
+ "Synthetic data training causes model collapse in practice.": {
+  "history": [
+   {
+    "round": 1,
+    "scouts": 6,
+    "verdict": "MISLEADING",
+    "confirmed": 5,
+    "challenged": 1,
+    "thread": 528
+   }
+  ],
+  "status": "checked"
+ },
+ "LLM benchmark scores are inflated by test-set contamination.": {
+  "history": [
+   {
+    "round": 1,
+    "scouts": 6,
+    "verdict": "SUPPORTED",
+    "confirmed": 5,
+    "challenged": 1,
+    "thread": 519
+   }
+  ],
+  "status": "checked"
+ },
+ "AI data centers will consume more than 10 percent of US electricity by 2030.": {
+  "history": [
+   {
+    "round": 1,
+    "scouts": 6,
+    "verdict": "MISLEADING",
+    "confirmed": 2,
+    "challenged": 4,
+    "thread": 521
+   },
+   {
+    "round": 2,
+    "scouts": 8,
+    "verdict": "MISLEADING",
+    "confirmed": 6,
+    "challenged": 2,
+    "thread": 664
+   }
+  ],
+  "status": "settled"
+ },
+ "Agentic AI will replace most entry-level software jobs within five years.": {
+  "history": [
+   {
+    "round": 1,
+    "scouts": 6,
+    "verdict": "UNVERIFIABLE",
+    "confirmed": 2,
+    "challenged": 4,
+    "thread": 524
+   },
+   {
+    "round": 2,
+    "scouts": 8,
+    "verdict": "UNVERIFIABLE",
+    "confirmed": 1,
+    "challenged": 7,
+    "thread": 660
+   },
+   {
+    "round": 3,
+    "scouts": 8,
+    "verdict": "UNVERIFIABLE",
+    "confirmed": 5,
+    "challenged": 3,
+    "thread": 839
+   },
+   {
+    "round": 0,
+    "scouts": 8,
+    "verdict": "UNVERIFIABLE",
+    "confirmed": 3,
+    "challenged": 5,
+    "thread": 1019
+   }
+  ],
+  "status": "settled"
+ },
+ "Quantizing an LLM to 4-bit loses almost no accuracy.": {
+  "history": [
+   {
+    "round": 1,
+    "scouts": 6,
+    "verdict": "MISLEADING",
+    "confirmed": 4,
+    "challenged": 2,
+    "thread": 523
+   }
+  ],
+  "status": "checked"
+ },
+ "Longer context windows make models reliably use all of the information in the context.": {
+  "history": [
+   {
+    "round": 1,
+    "scouts": 6,
+    "verdict": "FALSE",
+    "confirmed": 4,
+    "challenged": 2,
+    "thread": 525
+   }
+  ],
+  "status": "checked"
+ },
+ "Chain-of-thought reasoning improves accuracy on all tasks.": {
+  "history": [
+   {
+    "round": 1,
+    "scouts": 6,
+    "verdict": "FALSE",
+    "confirmed": 4,
+    "challenged": 2,
+    "thread": 527
+   }
+  ],
+  "status": "checked"
+ },
+ "Mixture-of-experts models are cheaper to run than dense models of the same quality.": {
+  "history": [
+   {
+    "round": 1,
+    "scouts": 6,
+    "verdict": "MISLEADING",
+    "confirmed": 4,
+    "challenged": 2,
+    "thread": 520
+   }
+  ],
+  "status": "checked"
+ },
+ "Vector databases are required to build production RAG systems.": {
+  "history": [
+   {
+    "round": 1,
+    "scouts": 6,
+    "verdict": "FALSE",
+    "confirmed": 5,
+    "challenged": 1,
+    "thread": 522
+   }
+  ],
+  "status": "checked"
+ },
+ "AI agents can reliably operate computers through screenshots and clicks.": {
+  "history": [
+   {
+    "round": 2,
+    "scouts": 8,
+    "verdict": "MISLEADING",
+    "confirmed": 6,
+    "challenged": 2,
+    "thread": 668
+   }
+  ],
+  "status": "checked"
+ },
+ "GPUs are the only practical hardware for LLM inference at scale.": {
+  "history": [
+   {
+    "round": 2,
+    "scouts": 8,
+    "verdict": "FALSE",
+    "confirmed": 3,
+    "challenged": 5,
+    "thread": 662
+   },
+   {
+    "round": 3,
+    "scouts": 8,
+    "verdict": "FALSE",
+    "confirmed": 6,
+    "challenged": 2,
+    "thread": 846
+   }
+  ],
+  "status": "settled"
+ },
+ "Speculative decoding speeds up LLM inference by 2-3x without changing outputs.": {
+  "history": [
+   {
+    "round": 2,
+    "scouts": 8,
+    "verdict": "MISLEADING",
+    "confirmed": 6,
+    "challenged": 2,
+    "thread": 666
+   }
+  ],
+  "status": "checked"
+ },
+ "Fine-tuning is usually better than RAG for adding company knowledge to an LLM.": {
+  "history": [
+   {
+    "round": 2,
+    "scouts": 8,
+    "verdict": "MISLEADING",
+    "confirmed": 2,
+    "challenged": 6,
+    "thread": 663
+   },
+   {
+    "round": 3,
+    "scouts": 8,
+    "verdict": "MISLEADING",
+    "confirmed": 6,
+    "challenged": 2,
+    "thread": 841
+   }
+  ],
+  "status": "settled"
+ },
+ "Most companies have moved their AI workloads to on-premises hardware to save cost.": {
+  "history": [
+   {
+    "round": 2,
+    "scouts": 8,
+    "verdict": "MISLEADING",
+    "confirmed": 3,
+    "challenged": 5,
+    "thread": 667
+   },
+   {
+    "round": 3,
+    "scouts": 8,
+    "verdict": "MISLEADING",
+    "confirmed": 4,
+    "challenged": 4,
+    "thread": 845
+   }
+  ],
+  "status": "settled"
+ },
+ "LLMs can reliably solve competition-level math problems in 2026.": {
+  "history": [
+   {
+    "round": 2,
+    "scouts": 8,
+    "verdict": "MISLEADING",
+    "confirmed": 3,
+    "challenged": 5,
+    "thread": 661
+   },
+   {
+    "round": 3,
+    "scouts": 8,
+    "verdict": "MISLEADING",
+    "confirmed": 6,
+    "challenged": 2,
+    "thread": 844
+   }
+  ],
+  "status": "settled"
+ },
+ "AI-generated text can be reliably detected by current detection tools.": {
+  "history": [
+   {
+    "round": 2,
+    "scouts": 8,
+    "verdict": "MISLEADING",
+    "confirmed": 3,
+    "challenged": 5,
+    "thread": 665
+   },
+   {
+    "round": 3,
+    "scouts": 8,
+    "verdict": "MISLEADING",
+    "confirmed": 5,
+    "challenged": 3,
+    "thread": 848
+   }
+  ],
+  "status": "settled"
+ },
+ "Training frontier models now costs more than 1 billion dollars per run.": {
+  "history": [
+   {
+    "round": 3,
+    "scouts": 8,
+    "verdict": "UNVERIFIABLE",
+    "confirmed": 4,
+    "challenged": 4,
+    "thread": 847
+   },
+   {
+    "round": 0,
+    "scouts": 8,
+    "verdict": "UNVERIFIABLE",
+    "confirmed": 5,
+    "challenged": 3,
+    "thread": 1026
+   },
+   {
+    "round": 0,
+    "scouts": 4,
+    "verdict": "UNVERIFIABLE",
+    "confirmed": 3,
+    "challenged": 1,
+    "thread": 1313
+   },
+   {
+    "round": 1,
+    "scouts": 4,
+    "verdict": "UNVERIFIABLE",
+    "confirmed": 2,
+    "challenged": 2,
+    "thread": 1344
+   }
+  ],
+  "status": "settled"
+ },
+ "Open-source AI models are more vulnerable to jailbreaks than closed models.": {
+  "history": [
+   {
+    "round": 3,
+    "scouts": 8,
+    "verdict": "MISLEADING",
+    "confirmed": 5,
+    "challenged": 3,
+    "thread": 842
+   }
+  ],
+  "status": "checked"
+ },
+ "Prompt injection has been solved by current guardrail products.": {
+  "history": [
+   {
+    "round": 3,
+    "scouts": 8,
+    "verdict": "FALSE",
+    "confirmed": 7,
+    "challenged": 1,
+    "thread": 843
+   }
+  ],
+  "status": "checked"
+ },
+ "Multimodal models understand charts and tables as well as humans.": {
+  "history": [
+   {
+    "round": 0,
+    "scouts": 8,
+    "verdict": "MISLEADING",
+    "confirmed": 5,
+    "challenged": 3,
+    "thread": 1025
+   }
+  ],
+  "status": "checked"
+ },
+ "AI agents are now widely used in production for customer service.": {
+  "history": [
+   {
+    "round": 0,
+    "scouts": 8,
+    "verdict": "SUPPORTED",
+    "confirmed": 4,
+    "challenged": 4,
+    "thread": 1020
+   }
+  ],
+  "status": "checked"
+ },
+ "SQL generation by LLMs is accurate enough for business users without review.": {
+  "history": [
+   {
+    "round": 0,
+    "scouts": 8,
+    "verdict": "MISLEADING",
+    "confirmed": 5,
+    "challenged": 3,
+    "thread": 1028
+   }
+  ],
+  "status": "checked"
+ },
+ "Oracle Autonomous Database tunes and patches itself without a DBA.": {
+  "history": [
+   {
+    "round": 0,
+    "scouts": 8,
+    "verdict": "SUPPORTED",
+    "confirmed": 7,
+    "challenged": 1,
+    "thread": 1027
+   }
+  ],
+  "status": "checked"
+ },
+ "Graph databases outperform relational databases for most AI workloads.": {
+  "history": [
+   {
+    "round": 0,
+    "scouts": 8,
+    "verdict": "MISLEADING",
+    "confirmed": 3,
+    "challenged": 5,
+    "thread": 1024
+   },
+   {
+    "round": 0,
+    "scouts": 4,
+    "verdict": "MISLEADING",
+    "confirmed": 1,
+    "challenged": 3,
+    "thread": 1314
+   }
+  ],
+  "status": "settled"
+ },
+ "Embedding models trained on general web text work well for specialized domains without fine-tuning.": {
+  "history": [
+   {
+    "round": 0,
+    "scouts": 8,
+    "verdict": "MISLEADING",
+    "confirmed": 2,
+    "challenged": 6,
+    "thread": 1021
+   },
+   {
+    "round": 0,
+    "scouts": 4,
+    "verdict": "MISLEADING",
+    "confirmed": 3,
+    "challenged": 1,
+    "thread": 1315
+   }
+  ],
+  "status": "settled"
+ },
+ "LLM inference costs per token have dropped more than 90 percent since 2023.": {
+  "history": [
+   {
+    "round": 0,
+    "scouts": 8,
+    "verdict": "MISLEADING",
+    "confirmed": 5,
+    "challenged": 3,
+    "thread": 1022
+   }
+  ],
+  "status": "checked"
+ },
+ "Apple Silicon Macs are competitive with NVIDIA GPUs for local LLM inference.": {
+  "history": [
+   {
+    "round": 0,
+    "scouts": 8,
+    "verdict": "SUPPORTED",
+    "confirmed": 5,
+    "challenged": 3,
+    "thread": 1023
+   }
+  ],
+  "status": "checked"
+ },
+ "The Model Context Protocol has become a standard supported by most major AI vendors.": {
+  "history": [
+   {
+    "round": 1,
+    "scouts": 4,
+    "verdict": "SUPPORTED",
+    "confirmed": 3,
+    "challenged": 1,
+    "thread": 1345
+   }
+  ],
+  "status": "checked"
+ },
+ "Reasoning models think longer and therefore always give better answers.": {
+  "history": [
+   {
+    "round": 1,
+    "scouts": 4,
+    "verdict": "FALSE",
+    "confirmed": 2,
+    "challenged": 2,
+    "thread": 1343
+   }
+  ],
+  "status": "checked"
+ },
+ "AI-written unit tests catch as many bugs as human-written tests.": {
+  "history": [
+   {
+    "round": 2,
+    "scouts": 3,
+    "verdict": "MISLEADING",
+    "confirmed": 0,
+    "challenged": 3,
+    "thread": 1375
+   },
+   {
+    "round": 3,
+    "scouts": 4,
+    "verdict": "MISLEADING",
+    "confirmed": 2,
+    "challenged": 2,
+    "thread": 1398
+   }
+  ],
+  "status": "settled"
+ },
+ "Most enterprise data is not ready for generative AI.": {
+  "history": [
+   {
+    "round": 2,
+    "scouts": 3,
+    "verdict": "UNVERIFIABLE",
+    "confirmed": 0,
+    "challenged": 3,
+    "thread": 1373
+   },
+   {
+    "round": 3,
+    "scouts": 4,
+    "verdict": "UNVERIFIABLE",
+    "confirmed": 0,
+    "challenged": 4,
+    "thread": 1397
+   },
+   {
+    "round": 4,
+    "scouts": 4,
+    "verdict": "SUPPORTED",
+    "confirmed": 0,
+    "challenged": 4,
+    "thread": 1427
+   },
+   {
+    "round": 5,
+    "scouts": 4,
+    "verdict": "UNVERIFIABLE",
+    "confirmed": 2,
+    "challenged": 2,
+    "thread": 1457
+   }
+  ],
+  "status": "settled"
+ },
+ "Self-driving robotaxis operate without safety drivers in multiple US cities.": {
+  "history": [
+   {
+    "round": 2,
+    "scouts": 3,
+    "verdict": "SUPPORTED",
+    "confirmed": 1,
+    "challenged": 2,
+    "thread": 1374
+   },
+   {
+    "round": 3,
+    "scouts": 4,
+    "verdict": "SUPPORTED",
+    "confirmed": 2,
+    "challenged": 2,
+    "thread": 1399
+   }
+  ],
+  "status": "settled"
+ },
+ "AI models can now generate full-length feature films.": {
+  "history": [
+   {
+    "round": 4,
+    "scouts": 4,
+    "verdict": "?",
+    "confirmed": 2,
+    "challenged": 2,
+    "thread": 1429
+   },
+   {
+    "round": 5,
+    "scouts": 4,
+    "verdict": "MISLEADING",
+    "confirmed": 1,
+    "challenged": 3,
+    "thread": 1458
+   },
+   {
+    "round": 6,
+    "scouts": 4,
+    "verdict": "?",
+    "confirmed": 2,
+    "challenged": 2,
+    "thread": 1487
+   },
+   {
+    "round": 7,
+    "scouts": 4,
+    "verdict": "?",
+    "confirmed": 1,
+    "challenged": 3,
+    "thread": 1518
+   }
+  ],
+  "status": "settled"
+ },
+ "Open-weight model releases from China lead global open-model benchmarks.": {
+  "history": [
+   {
+    "round": 4,
+    "scouts": 4,
+    "verdict": "SUPPORTED",
+    "confirmed": 1,
+    "challenged": 3,
+    "thread": 1428
+   },
+   {
+    "round": 5,
+    "scouts": 4,
+    "verdict": "SUPPORTED",
+    "confirmed": 2,
+    "challenged": 2,
+    "thread": 1459
+   }
+  ],
+  "status": "settled"
+ },
+ "LLMs memorize and can reproduce copyrighted training data verbatim.": {
+  "history": [
+   {
+    "round": 6,
+    "scouts": 4,
+    "verdict": "SUPPORTED",
+    "confirmed": 0,
+    "challenged": 4,
+    "thread": 1488
+   },
+   {
+    "round": 7,
+    "scouts": 4,
+    "verdict": "SUPPORTED",
+    "confirmed": 2,
+    "challenged": 2,
+    "thread": 1517
+   }
+  ],
+  "status": "settled"
+ },
+ "Agent frameworks reduce development time compared with writing agents from scratch.": {
+  "history": [
+   {
+    "round": 6,
+    "scouts": 4,
+    "verdict": "MISLEADING",
+    "confirmed": 1,
+    "challenged": 3,
+    "thread": 1489
+   },
+   {
+    "round": 7,
+    "scouts": 4,
+    "verdict": "MISLEADING",
+    "confirmed": 1,
+    "challenged": 3,
+    "thread": 1519
+   }
+  ],
+  "status": "settled"
+ },
+ "Running AI inference on edge devices is now cheaper than cloud inference for most apps.": {
+  "history": [
+   {
+    "round": 8,
+    "scouts": 3,
+    "verdict": "UNVERIFIABLE",
+    "confirmed": 0,
+    "challenged": 3,
+    "thread": 1548
+   }
+  ],
+  "status": "weak"
+ },
+ "Hackathon projects rarely become real products.": {
+  "history": [
+   {
+    "round": 8,
+    "scouts": 3,
+    "verdict": "UNVERIFIABLE",
+    "confirmed": 0,
+    "challenged": 3,
+    "thread": 1547
+   }
+  ],
+  "status": "weak"
+ },
+ "Database vector indexes like HNSW trade recall for speed.": {
+  "history": [
+   {
+    "round": 8,
+    "scouts": 3,
+    "verdict": "SUPPORTED",
+    "confirmed": 2,
+    "challenged": 1,
+    "thread": 1549
+   }
+  ],
+  "status": "checked"
+ }
+}
