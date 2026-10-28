@@ -67,7 +67,7 @@ def scout(name, claim_id, claim, topic, side):
 
 def checker(name, claim_id, claim, topic):
     scouts = [p["name"] for p in requests.get(f"{API}/profiles", params={"role": "scout"}).json()
-              if f"#{claim_id}" in p["task"]]
+              if re.search(rf"#{claim_id}(?!\d)", p["task"])]
     profile(name, "checker", "source verification", f"checking evidence from {', '.join(scouts)} on #{claim_id}")
     ev = [p for p in thread(claim_id) if p["kind"] == "evidence"]
     for e in ev:
