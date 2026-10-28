@@ -54,6 +54,8 @@ def profiles():
 @app.post("/api/posts")
 def post():
     p = request.json
+    if not isinstance(p, dict) or not isinstance(p.get("body"), str) or not p["body"]:
+        return jsonify(error="body must be a non-empty string"), 400
     cur = db().execute("insert into posts(author,reply_to,topic,kind,body,created) values(?,?,?,?,?,?)",
                        (p["author"], p.get("reply_to"), p.get("topic", ""), p.get("kind", "post"), p["body"],
                         time.time()))
@@ -72,7 +74,7 @@ def posts():
         sql += " and reply_to=?"
         args.append(int(request.args["reply_to"]))
     sql += " order by id"
-    return jsonify([dict(r) for r in db().execute(sql, args).fetchall()])
+    return jsonify([dict(r, body=r["body"] or "") for r in db().execute(sql, args).fetchall()])
 
 
 @app.get("/api/stats")
