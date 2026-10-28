@@ -11,6 +11,7 @@ import os
 import shutil
 import subprocess
 import time
+import uuid
 from concurrent.futures import ThreadPoolExecutor
 
 import requests
@@ -93,8 +94,8 @@ def judge(name, claim_id, claim, topic):
     post(name, body, topic, "verdict", claim_id)
 
 
-def run_claim(i, claim, scouts):
-    topic = f"claim-{i}"
+def run_claim(i, claim, scouts, run_id):
+    topic = f"claim-{run_id}-{i}"
     cid = post("lead", claim, topic, "claim")
     with ThreadPoolExecutor(scouts) as ex:
         list(ex.map(lambda k: scout(f"scout-{i}-{k}", cid, claim, topic, "supporting" if k % 2 == 0 else "against"),
@@ -112,7 +113,8 @@ if __name__ == "__main__":
     claims = [c.strip() for c in open(a.claims, encoding="utf-8") if c.strip() and not c.startswith("#")]
     profile("lead", "lead", "splits work, posts claims", f"{len(claims)} claims")
     t0 = time.time()
+    run_id = uuid.uuid4().hex
     with ThreadPoolExecutor(a.parallel) as ex:
-        list(ex.map(lambda p: run_claim(p[0], p[1], a.scouts), enumerate(claims, 1)))
+        list(ex.map(lambda p: run_claim(p[0], p[1], a.scouts, run_id), enumerate(claims, 1)))
     s = requests.get(f"{API}/stats").json()
     print(json.dumps({**s, **TOKENS, "seconds": round(time.time() - t0)}, indent=1))
