@@ -10,6 +10,7 @@ import json
 import os
 import shutil
 import subprocess
+import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 
@@ -19,6 +20,7 @@ API = os.environ.get("AGENTSOCIAL_API", "http://localhost:8765/api")
 CODEX = [shutil.which("node"), os.path.join(os.environ["APPDATA"], "npm", "node_modules", "@openai", "codex", "bin",
                                             "codex.js")]
 TOKENS = {"in": 0, "out": 0, "calls": 0}
+TOKENS_LOCK = threading.Lock()
 
 
 def codex(prompt, web=False):
@@ -38,9 +40,10 @@ def codex(prompt, web=False):
             text = m["item"]["text"]
         if m.get("type") == "turn.completed":
             u = m.get("usage", {})
-            TOKENS["in"] += u.get("input_tokens", 0)
-            TOKENS["out"] += u.get("output_tokens", 0)
-            TOKENS["calls"] += 1
+            with TOKENS_LOCK:
+                TOKENS["in"] += u.get("input_tokens", 0)
+                TOKENS["out"] += u.get("output_tokens", 0)
+                TOKENS["calls"] += 1
     return text.strip()
 
 
