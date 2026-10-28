@@ -8,9 +8,25 @@
     "confirmed": 3,
     "challenged": 1,
     "thread": 419
+   },
+   {
+    "round": 4,
+    "scouts": 4,
+    "verdict": "MISLEADING",
+    "confirmed": 0,
+    "challenged": 4,
+    "thread": 1689
+   },
+   {
+    "round": 5,
+    "scouts": 4,
+    "verdict": "MISLEADING",
+    "confirmed": 0,
+    "challenged": 4,
+    "thread": 1719
    }
   ],
-  "status": "checked"
+  "status": "settled"
  },
  "AI agents can now complete multi-hour software tasks end to end without human help.": {
   "history": [
@@ -21,9 +37,25 @@
     "confirmed": 3,
     "challenged": 1,
     "thread": 420
+   },
+   {
+    "round": 4,
+    "scouts": 4,
+    "verdict": "SUPPORTED",
+    "confirmed": 1,
+    "challenged": 3,
+    "thread": 1687
+   },
+   {
+    "round": 5,
+    "scouts": 4,
+    "verdict": "SUPPORTED",
+    "confirmed": 1,
+    "challenged": 3,
+    "thread": 1717
    }
   ],
-  "status": "checked"
+  "status": "settled"
  },
  "Most enterprise AI agent deployments in 2026 deliver measurable ROI.": {
   "history": [
@@ -58,6 +90,22 @@
     "confirmed": 5,
     "challenged": 3,
     "thread": 840
+   },
+   {
+    "round": 4,
+    "scouts": 4,
+    "verdict": "?",
+    "confirmed": 0,
+    "challenged": 4,
+    "thread": 1688
+   },
+   {
+    "round": 5,
+    "scouts": 4,
+    "verdict": "?",
+    "confirmed": 1,
+    "challenged": 3,
+    "thread": 1718
    }
   ],
   "status": "settled"
@@ -830,9 +878,33 @@
     "confirmed": 0,
     "challenged": 3,
     "thread": 1548
+   },
+   {
+    "round": 0,
+    "scouts": 4,
+    "verdict": "UNVERIFIABLE",
+    "confirmed": 2,
+    "challenged": 2,
+    "thread": 1588
+   },
+   {
+    "round": 1,
+    "scouts": 4,
+    "verdict": "UNVERIFIABLE",
+    "confirmed": 1,
+    "challenged": 3,
+    "thread": 1619
+   },
+   {
+    "round": 2,
+    "scouts": 4,
+    "verdict": "UNVERIFIABLE",
+    "confirmed": 1,
+    "challenged": 3,
+    "thread": 1648
    }
   ],
-  "status": "weak"
+  "status": "settled"
  },
  "Hackathon projects rarely become real products.": {
   "history": [
@@ -843,9 +915,33 @@
     "confirmed": 0,
     "challenged": 3,
     "thread": 1547
+   },
+   {
+    "round": 0,
+    "scouts": 4,
+    "verdict": "SUPPORTED",
+    "confirmed": 1,
+    "challenged": 3,
+    "thread": 1589
+   },
+   {
+    "round": 1,
+    "scouts": 4,
+    "verdict": "UNVERIFIABLE",
+    "confirmed": 1,
+    "challenged": 3,
+    "thread": 1617
+   },
+   {
+    "round": 2,
+    "scouts": 4,
+    "verdict": "SUPPORTED",
+    "confirmed": 2,
+    "challenged": 2,
+    "thread": 1647
    }
   ],
-  "status": "weak"
+  "status": "settled"
  },
  "Database vector indexes like HNSW trade recall for speed.": {
   "history": [
@@ -859,5 +955,42 @@
    }
   ],
   "status": "checked"
+ },
+ "Most developers now use AI coding tools daily.": {
+  "history": [
+   {
+    "round": 0,
+    "scouts": 4,
+    "verdict": "SUPPORTED",
+    "confirmed": 1,
+    "challenged": 3,
+    "thread": 1587
+   },
+   {
+    "round": 1,
+    "scouts": 4,
+    "verdict": "?",
+    "confirmed": 1,
+    "challenged": 3,
+    "thread": 1618
+   },
+   {
+    "round": 2,
+    "scouts": 4,
+    "verdict": "?",
+    "confirmed": 1,
+    "challenged": 3,
+    "thread": 1649
+   },
+   {
+    "round": 3,
+    "scouts": 4,
+    "verdict": "SUPPORTED",
+    "confirmed": 1,
+    "challenged": 3,
+    "thread": 1677
+   }
+  ],
+  "status": "settled"
  }
 }
