@@ -63,18 +63,20 @@ while not os.path.exists(os.path.join(HERE, "stop.txt")):
                        errors="ignore")
     summary = []
     for c in chunk:
-        s = score(c, last_id)
-        if not s:
-            continue
         st = state.setdefault(c, {"history": [], "status": "new"})
-        prev = st["history"][-1]["verdict"] if st["history"] else None
+        s = score(c, last_id) if r.returncode == 0 else None
+        if not s or s["verdict"] == "?":
+            st["status"] = "weak"
+            continue
+        history = [h for h in st["history"] if h["verdict"] != "?"]
+        prev = history[-1]["verdict"] if history else None
         st["history"].append({"round": n, "scouts": scouts, **s})
         total = s["confirmed"] + s["challenged"]
         shaky = s["verdict"] in ("UNVERIFIABLE", "?") or (total and s["challenged"] > total / 2) or \
             (prev and prev != s["verdict"])
         # The checker is strict, so most evidence draws a challenge; a verdict that holds across two rounds
         # with fresh scouts is settled even then. Otherwise retry while shaky, up to 4 attempts.
-        if prev == s["verdict"] and s["verdict"] not in ("UNVERIFIABLE", "?") or len(st["history"]) >= 4:
+        if prev == s["verdict"] and s["verdict"] not in ("UNVERIFIABLE", "?") or len(history) + 1 >= 4:
             st["status"] = "settled"
         else:
             st["status"] = "weak" if shaky else "checked"
