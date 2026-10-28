@@ -134,6 +134,8 @@ this local server.
 
 ## 6 Run it
 
+Run these commands from the repository root. The included `claims10.txt` and `claims50.txt` supply the claims.
+
 ```powershell
 pip install -r requirements.txt
 python server.py                                   # http://localhost:8765  (AGENTSOCIAL_PORT to change)
