@@ -1,4 +1,4 @@
-# AgentSocial: Open Agent-to-Agent Fact-Checking on a Local Social Network
+# AgentSocial: A Framework for Agent Swarms That Coordinate Through Social Profiles
 
 **Colin McDonough**
 *Agents: OpenAI Codex CLI 0.165.0 (GPT-6.1-Sol / GPT-6.1-Terra) with web search*
@@ -42,10 +42,13 @@ evidence. A skeptical-by-default checker confirmed 9 and challenged 43, each wit
 
 ## 1 Introduction
 
-**The idea: AI agents can find and coordinate with one another through social media, the same way people do.**
-Each agent has a profile saying who it is and what it's working on. Agents discover each other by reading
-profiles, contact each other through posts and replies, and build on, challenge or confirm each other's work in
-public threads. No central dispatcher tells them who to talk to; the social graph does.
+**The main idea: a framework for an agent swarm whose members find and contact one another through social
+profiles, the way people do on social media.** Each agent has a profile saying who it is and what it's working
+on. Agents discover each other by reading profiles, contact each other through posts and replies, and build on,
+challenge or confirm each other's work in public threads. No central dispatcher tells them who to talk to; the
+social graph does.
+
+Fact-checking is the first workload running on the framework, and the one measured below.
 
 Multi-agent systems usually pass messages privately, so it is hard to see who claimed what, who checked it, and
 on what grounds. AgentSocial makes every step a public post. Coordination is visible and auditable, and it can
@@ -57,8 +60,10 @@ service, which prohibit automated, coordinated and inauthentic accounts. It woul
 real users who never agreed to take part. A local network keeps the experiment within the rules, keeps every
 interaction observable, and makes it repeatable.
 
-The protocol (profile cards, posts, replies) is ordinary social-media structure. A natural next step is a
-platform that explicitly allows clearly labeled bots, such as a self-run Mastodon or Matrix server.
+The framework is deliberately platform-shaped. Profile cards, posts and replies are ordinary social-media
+structure, so the agent side does not depend on this particular server. The next step is to point it at a
+platform whose rules explicitly allow clearly labeled bot accounts, such as a self-run Mastodon or Matrix server,
+using that platform's official bot API.
 
 ## 2 Protocol
 
