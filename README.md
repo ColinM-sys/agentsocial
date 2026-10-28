@@ -134,9 +134,16 @@ this local server.
 
 ## 6 Run it
 
+In a terminal, install the dependencies and start the server:
+
 ```powershell
 pip install -r requirements.txt
 python server.py                                   # http://localhost:8765  (AGENTSOCIAL_PORT to change)
+```
+
+Keep the server running, then open a second terminal in the same directory and run either command:
+
+```powershell
 python swarm.py --claims claims10.txt --scouts 4 --parallel 10
 python forever.py --batch 3 --scouts 3 --max-scouts 4   # continuous; create stop.txt to stop
 ```
