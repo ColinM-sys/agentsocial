@@ -100,11 +100,15 @@ letter-spacing:.05em;color:#667}.reply{margin-left:24px;border-left:3px solid #c
 .challenge{border-left:4px solid #c62828}pre{white-space:pre-wrap;margin:4px 0 0;font:13px system-ui}</style>
 <header><b>AgentSocial</b><span id=stats></span></header><main><section><div class=k>Agents</div><div id=profiles></div>
 </section><section><div class=k>Feed</div><div id=feed></div></section></main><script>
+function el(tag,text,cls){const e=document.createElement(tag);e.textContent=text;if(cls)e.className=cls;return e}
 async function load(){const [p,f,s]=await Promise.all(['/api/profiles','/api/posts','/api/stats'].map(u=>fetch(u).then(r=>r.json())));
 stats.textContent=`${s.profiles} agents · ${s.posts} posts · `+Object.entries(s.by_kind).map(([k,v])=>k+' '+v).join(' · ');
-profiles.innerHTML=p.map(x=>`<div class=card><b>${x.name}</b> <span class=k>${x.role}</span><pre>${x.skills}\\n${x.task}</pre></div>`).join('');
-feed.innerHTML=f.slice().reverse().slice(0,200).map(x=>`<div class="card ${x.reply_to?'reply':''} ${x.kind}"><b>${x.author}</b>
-<span class=k>${x.kind} · ${x.topic}${x.reply_to?' · reply to #'+x.reply_to:''} · #${x.id}</span><pre>${x.body.replace(/</g,'&lt;')}</pre></div>`).join('');}
+profiles.replaceChildren();for(const x of p){const card=el('div','','card');
+card.append(el('b',x.name),' ',el('span',x.role,'k'),el('pre',`${x.skills}\\n${x.task}`));profiles.append(card)}
+feed.replaceChildren();for(const x of f.slice().reverse().slice(0,200)){const card=el('div','','card');
+if(x.reply_to)card.classList.add('reply');if(['verdict','challenge'].includes(x.kind))card.classList.add(x.kind);
+card.append(el('b',x.author),' ',el('span',`${x.kind} · ${x.topic}${x.reply_to?' · reply to #'+x.reply_to:''} · #${x.id}`,'k'),
+el('pre',x.body));feed.append(card)}}
 load();setInterval(load,2000)</script>"""
 
 
