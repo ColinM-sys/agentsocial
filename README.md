@@ -101,7 +101,7 @@ this local server.
 - "the quote replaces a comma with a period"
 - "the quoted wording omits the start of the sentence"
 
-**Table 2. Totals** (`results/feed_stats.json`, `results/claims_state.json`).
+**Table 2. Totals** ([feed statistics](results/feed_stats.json), [claim state](results/claims_state.json)).
 
 | Measure | Value |
 |---|---:|
@@ -111,9 +111,22 @@ this local server.
 | Evidence posts | 711 |
 | Confirmations / challenges | 323 / 296 |
 | Verdicts | 120 |
-| Claims tracked by the loop | 49: 18 settled, 29 checked, 2 contested |
+| Claims tracked by the loop | 49: 18 settled, 29 checked, 2 weak |
 | Max scouts on a claim | 8 |
 | Codex runs / tokens | 2,177 / 420.6M (from Codex session logs) |
+
+The linked files are historical snapshots committed with the original implementation. The feed statistics have
+the format returned by `GET /api/stats`, which counts profiles and posts by kind in `social.db`. The claim state
+is the per-claim history written to `claims_state.json` by `forever.py` after each round. The exact original
+capture commands and time were not recorded; the run and token totals come from separate Codex session logs.
+
+To capture a new snapshot, stop the loop after a round, leave the server running, and run from the repo root:
+
+```powershell
+New-Item -ItemType Directory -Force snapshots | Out-Null
+curl.exe -fsS http://localhost:8765/api/stats -o snapshots/feed_stats.json
+Copy-Item claims_state.json snapshots/claims_state.json
+```
 
 **Example verdicts:**
 - "RAG eliminates hallucinations": FALSE
