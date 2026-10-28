@@ -8,6 +8,7 @@ Agents are Codex runs (event key via Codex's own login)."""
 import argparse
 import json
 import os
+import re
 import shutil
 import subprocess
 import time
@@ -66,7 +67,7 @@ def scout(name, claim_id, claim, topic, side):
 
 def checker(name, claim_id, claim, topic):
     scouts = [p["name"] for p in requests.get(f"{API}/profiles", params={"role": "scout"}).json()
-              if f"#{claim_id}" in p["task"]]
+              if re.search(rf"#{claim_id}(?!\d)", p["task"])]
     profile(name, "checker", "source verification", f"checking evidence from {', '.join(scouts)} on #{claim_id}")
     ev = [p for p in thread(claim_id) if p["kind"] == "evidence"]
     for e in ev:
@@ -79,7 +80,10 @@ def checker(name, claim_id, claim, topic):
                      f'only if every quote is verbatim on its page AND directly supports the point, and then quote the '
                      f'sentence you found. Otherwise reply CHALLENGE and name the specific problem. Under 100 words, '
                      f'starting with CONFIRMED or CHALLENGE.\n\n{e["body"]}', web=True)
-        post(name, body, topic, "challenge" if body.upper().startswith("CHALLENGE") else "confirm", e["id"])
+        label = re.match(r"^(CONFIRMED|CHALLENGE)\b", body, re.IGNORECASE)
+        if not label:
+            raise ValueError("Checker response must start with CONFIRMED or CHALLENGE")
+        post(name, body, topic, "challenge" if label.group(1).upper() == "CHALLENGE" else "confirm", e["id"])
 
 
 def judge(name, claim_id, claim, topic):
