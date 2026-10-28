@@ -4,8 +4,8 @@ Each round:
   2. run the swarm on them (more scouts for a claim each time it comes back)
   3. score each claim from the feed: verdict, confirmed vs challenged evidence
   4. a claim is "weak" (re-queued) if its verdict is UNVERIFIABLE, or most evidence was challenged, or its
-     verdict changed since last time; it is "settled" after two rounds with the same verdict and mostly
-     confirmed evidence
+     verdict changed since last time; it is "settled" after two rounds with the same valid verdict, or
+     "unresolved" after four scored rounds without a repeated valid verdict
 Writes rounds.log (stats per round) and claims_state.json (history per claim).
     python forever.py [--batch 10] [--scouts 4] [--max-scouts 8]"""
 import argparse
@@ -91,9 +91,11 @@ while not os.path.exists(os.path.join(HERE, "stop.txt")):
         shaky = s["verdict"] in ("UNVERIFIABLE", "?") or (total and s["challenged"] > total / 2) or \
             (prev and prev != s["verdict"])
         # The checker is strict, so most evidence draws a challenge; a verdict that holds across two rounds
-        # with fresh scouts is settled even then. Otherwise retry while shaky, up to 4 attempts.
-        if prev == s["verdict"] and s["verdict"] not in ("UNVERIFIABLE", "?") or len(st["history"]) >= 4:
+        # with fresh scouts is settled even then. Otherwise retry while shaky, up to 4 scored rounds.
+        if prev == s["verdict"] and s["verdict"] not in ("UNVERIFIABLE", "?"):
             st["status"] = "settled"
+        elif len(st["history"]) >= 4:
+            st["status"] = "unresolved"
         else:
             st["status"] = "weak" if shaky else "checked"
         summary.append(f"  {st['status']:8} {s['verdict']:12} ok={s['confirmed']} challenged={s['challenged']} "
@@ -112,7 +114,8 @@ while not os.path.exists(os.path.join(HERE, "stop.txt")):
                 os.unlink(temp_path)
             except FileNotFoundError:
                 pass
-    counts = {k: sum(1 for s in state.values() if s["status"] == k) for k in ("settled", "checked", "weak")}
+    counts = {k: sum(1 for s in state.values() if s["status"] == k)
+              for k in ("settled", "checked", "weak", "unresolved")}
     with open(os.path.join(HERE, "rounds.log"), "a", encoding="utf-8") as f:
         f.write(f"round {n} {time.strftime('%H:%M:%S')} {time.time() - t0:.0f}s rc={r.returncode} scouts={scouts} "
                 f"claims={counts}\n" + "\n".join(summary) + f"\n{r.stdout[-400:]}{r.stderr[-300:]}\n")
