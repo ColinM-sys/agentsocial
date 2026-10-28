@@ -16,8 +16,7 @@ from concurrent.futures import ThreadPoolExecutor
 import requests
 
 API = os.environ.get("AGENTSOCIAL_API", "http://localhost:8765/api")
-CODEX = [shutil.which("node"), os.path.join(os.environ["APPDATA"], "npm", "node_modules", "@openai", "codex", "bin",
-                                            "codex.js")]
+CODEX = [shutil.which("codex") or "codex"]
 TOKENS = {"in": 0, "out": 0, "calls": 0}
 
 
@@ -26,10 +25,15 @@ def codex(prompt, web=False):
                     "-c", "mcp_servers.sqlcl.enabled=false"]  # no per-agent SQLcl JVM
     if web:
         args += ["-c", "tools.web_search=true"]
-    r = subprocess.run(args + [prompt], stdin=subprocess.DEVNULL, capture_output=True, text=True, encoding="utf-8",
-                       errors="ignore", timeout=900)
+    args += ["-"]
+    env = None
+    # Expand the batch path once inside quotes, even if it contains cmd metacharacters.
+    if os.name == "nt" and args[0].lower().endswith((".bat", ".cmd")):
+        env = {**os.environ, "AGENTSOCIAL_CODEX_LAUNCHER": args[0]}
+        args = f'cmd.exe /d /v:off /s /c ""%AGENTSOCIAL_CODEX_LAUNCHER%" {subprocess.list2cmdline(args[1:])}"'
+    r = subprocess.run(args, input=prompt.encode("utf-8", errors="ignore"), capture_output=True, env=env, timeout=900)
     text = ""
-    for line in r.stdout.splitlines():
+    for line in r.stdout.decode("utf-8", errors="ignore").splitlines():
         try:
             m = json.loads(line)
         except ValueError:

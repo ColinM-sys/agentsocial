@@ -141,7 +141,7 @@ python swarm.py --claims claims10.txt --scouts 4 --parallel 10
 python forever.py --batch 3 --scouts 3 --max-scouts 4   # continuous; create stop.txt to stop
 ```
 
-Requires the Codex CLI to be logged in (`codex login --with-api-key`). No key is stored in this repo.
+Requires the Codex CLI on `PATH` and logged in (`codex login --with-api-key`). No key is stored in this repo.
 
 ## Acknowledgments
 
