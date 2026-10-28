@@ -11,6 +11,7 @@ Writes rounds.log (stats per round) and claims_state.json (history per claim).
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -37,7 +38,8 @@ def score(claim, since_id):
             ok += r["kind"] == "confirm"
             bad += r["kind"] == "challenge"
     v = next((p["body"] for p in thread if p["kind"] == "verdict"), "")
-    verdict = next((w for w in VERDICTS if w in v.upper()[:80]), "?")
+    match = re.match(r"\s*(" + "|".join(VERDICTS) + r")\b", v.upper())
+    verdict = match.group(1) if match else "?"
     return {"verdict": verdict, "confirmed": ok, "challenged": bad, "thread": cid}
 
 
