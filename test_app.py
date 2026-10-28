@@ -148,6 +148,7 @@ class Element {
       const text = new Element('#text'); text.textContent = c; return text;
     }));
   }
+  prepend(...children) { this.children.unshift(...children); }
   replaceChildren(...children) { this.text = ''; this.children = []; this.append(...children); }
   get classList() { return {add: c => { this.className += (this.className ? ' ' : '') + c; }}; }
 }
@@ -155,6 +156,7 @@ global.document = {createElement: tag => new Element(tag)};
 global.profiles = new Element('div');
 global.feed = new Element('div');
 global.stats = new Element('span');
+global.updates = new Element('button');
 global.fetch = async url => ({json: async () => data[url.split('/').pop()]});
 global.setInterval = () => {};
 (async () => {
@@ -177,6 +179,196 @@ global.setInterval = () => {};
 })().catch(error => { console.error(error); process.exitCode = 1; });
 """
     result = subprocess.run(["node", "-e", harness], input=json.dumps(data),
+                            text=True, capture_output=True, check=False)
+    assert result.returncode == 0, result.stderr
+
+
+def test_feed_preserves_cards_and_can_pause_updates(client):
+    html = client.get("/").get_data(as_text=True)
+    script = re.search(r"<script>(.*?)</script>", html, re.DOTALL).group(1)
+    button = re.search(r"<button\b[^>]*\bid\s*=\s*(?:\"updates\"|'updates'|updates\b)[^>]*>([^<]*)</button\s*>",
+                       html, re.IGNORECASE)
+    assert button, "the page must expose a live-update control"
+    # Run the page's own polling code with controlled responses. The fake DOM
+    # records removals, since even reusing a removed node clears a selection.
+    harness = r"""
+const assert = require('assert');
+const vm = require('vm');
+const {script, button} = JSON.parse(require('fs').readFileSync(0, 'utf8'));
+const removed = [];
+const removedProfiles = [];
+class Element {
+  constructor(tag) { this.tagName = tag; this.className = ''; this.children = []; this.text = ''; this.parentNode = null; }
+  set textContent(value) {
+    while (this.children.length) this.removeChild(this.children[0]);
+    this.text = value == null ? '' : String(value);
+  }
+  get textContent() { return this.text + this.children.map(child => child.textContent).join(''); }
+  removeChild(child) {
+    if (this === global.feed) removed.push(child);
+    if (this === global.profiles) removedProfiles.push(child);
+    this.children.splice(this.children.indexOf(child), 1);
+    child.parentNode = null;
+  }
+  append(...children) { this.insert(children, false); }
+  prepend(...children) { this.insert(children, true); }
+  insert(children, first) {
+    const nodes = children.map(child => {
+      if (typeof child === 'string') { const node = new Element('#text'); node.textContent = child; child = node; }
+      if (child.parentNode) child.parentNode.removeChild(child);
+      child.parentNode = this;
+      return child;
+    });
+    if (first) this.children.unshift(...nodes); else this.children.push(...nodes);
+  }
+  replaceChildren(...children) { this.textContent = ''; this.append(...children); }
+  get classList() { return {add: name => { this.className += ' ' + name; }}; }
+}
+global.document = {createElement: tag => new Element(tag)};
+global.profiles = new Element('div');
+global.feed = new Element('div');
+global.stats = new Element('span');
+global.updates = new Element('button');
+updates.textContent = button;
+let tick;
+global.setInterval = callback => { tick = callback; };
+const replies = [];
+let requests = 0;
+let profileData = [{name: 'scout', role: 'agent', skills: 'search', task: 'read'}];
+global.fetch = async url => {
+  requests++;
+  const response = url.endsWith('/posts') ? await replies.shift()
+    : url.endsWith('/profiles') ? profileData : {profiles: 1, posts: 0, by_kind: {}};
+  return {json: async () => response};
+};
+const posts = count => Array.from({length: count}, (_, i) => ({
+  id: i + 1, author: `author ${i + 1}`, kind: 'evidence', topic: 'test', body: `body ${i + 1}`
+}));
+const ids = () => feed.children.map(card => Number(card.children.find(child => child.tagName === 'span').textContent.match(/#(\d+)$/)[1]));
+const sameCards = (actual, expected) => {
+  assert.strictEqual(actual.length, expected.length);
+  expected.forEach((card, index) => assert.strictEqual(actual[index], card));
+};
+const flush = () => new Promise(resolve => setImmediate(resolve));
+const deferred = () => {
+  let resolve;
+  const promise = new Promise(done => { resolve = done; });
+  return {promise, resolve};
+};
+(async () => {
+  replies.push(Promise.resolve(posts(205)));
+  vm.runInThisContext(script);
+  await flush();
+  assert.strictEqual(typeof tick, 'function');
+  assert.match(updates.textContent, /pause/i);
+  assert.deepStrictEqual(ids(), Array.from({length: 200}, (_, i) => 205 - i));
+  const original = feed.children.slice();
+  const originalProfile = profiles.children[0];
+  assert(originalProfile);
+
+  replies.push(Promise.resolve(posts(205)));
+  tick();
+  await flush();
+  sameCards(feed.children, original);
+  assert.deepStrictEqual(removed, [], 'an unchanged refresh removed existing cards');
+  assert.strictEqual(profiles.children[0], originalProfile);
+  assert.deepStrictEqual(removedProfiles, [], 'an unchanged refresh removed existing profiles');
+
+  replies.push(Promise.resolve(posts(208)));
+  tick();
+  await flush();
+  assert.deepStrictEqual(ids().slice(0, 3), [208, 207, 206]);
+  sameCards(feed.children.slice(3), original);
+  assert.deepStrictEqual(removed, [], 'inserting new posts removed existing cards');
+  assert.strictEqual(profiles.children[0], originalProfile);
+  assert.deepStrictEqual(removedProfiles, []);
+
+  // More than a screenful can arrive between polls; none of the new IDs is lost.
+  replies.push(Promise.resolve(posts(458)));
+  tick();
+  await flush();
+  assert.deepStrictEqual(ids(), Array.from({length: 453}, (_, i) => 458 - i));
+  sameCards(feed.children.slice(-200), original);
+  assert.deepStrictEqual(removed, []);
+
+  const inFlight = deferred();
+  replies.push(inFlight.promise);
+  tick();
+  const beforePause = feed.children.slice();
+  updates.onclick();
+  assert.match(updates.textContent, /resume/i);
+  inFlight.resolve(posts(459));
+  await flush();
+  sameCards(feed.children, beforePause);
+  const pausedRequests = requests;
+  tick();
+  await flush();
+  assert.strictEqual(requests, pausedRequests, 'polling continued while paused');
+
+  replies.push(Promise.resolve(posts(459)));
+  updates.onclick();
+  assert.match(updates.textContent, /pause/i);
+  if (requests === pausedRequests) tick();
+  await flush();
+  assert.strictEqual(ids()[0], 459);
+  sameCards(feed.children.slice(1), beforePause);
+
+  const older = deferred();
+  const newer = deferred();
+  replies.push(older.promise, newer.promise);
+  tick();
+  const afterFirst = requests;
+  tick();
+  if (requests > afterFirst) {
+    newer.resolve(posts(461));
+    await flush();
+    const afterNewer = feed.children.slice();
+    older.resolve(posts(460));
+    await flush();
+    sameCards(feed.children, afterNewer);
+  } else {
+    older.resolve(posts(460));
+    await flush();
+    newer.resolve(posts(461));
+    tick();
+    await flush();
+  }
+  assert.deepStrictEqual(ids(), Array.from({length: 456}, (_, i) => 461 - i));
+  assert.deepStrictEqual(removed, []);
+  assert.strictEqual(profiles.children[0], originalProfile);
+  assert.deepStrictEqual(removedProfiles, []);
+
+  // A response started before pausing must stay obsolete after resuming,
+  // including when it arrives before the fresh request has completed.
+  const oldGeneration = deferred();
+  const fresh = deferred();
+  replies.push(oldGeneration.promise);
+  tick();
+  updates.onclick();
+  replies.push(fresh.promise);
+  const beforeResume = requests;
+  updates.onclick();
+  if (requests === beforeResume) tick();
+  const freshStarted = requests > beforeResume;
+  const beforeOldResponse = feed.children.slice();
+  oldGeneration.resolve(posts(462));
+  await flush();
+  sameCards(feed.children, beforeOldResponse);
+  fresh.resolve(posts(463));
+  if (!freshStarted) tick();
+  await flush();
+  assert.deepStrictEqual(ids().slice(0, 2), [463, 462]);
+  sameCards(feed.children.slice(2), beforeOldResponse);
+  assert.deepStrictEqual(removed, []);
+
+  profileData = [{...profileData[0], task: 'review'}];
+  replies.push(Promise.resolve(posts(463)));
+  tick();
+  await flush();
+  assert(profiles.children[0].textContent.includes('review'), 'changed profiles must still update');
+})().catch(error => { console.error(error); process.exitCode = 1; });
+"""
+    result = subprocess.run(["node", "-e", harness], input=json.dumps({"script": script, "button": button.group(1)}),
                             text=True, capture_output=True, check=False)
     assert result.returncode == 0, result.stderr
 
