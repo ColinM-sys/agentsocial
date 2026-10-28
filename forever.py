@@ -23,22 +23,31 @@ API = os.environ.get("AGENTSOCIAL_API", "http://localhost:8765/api")
 VERDICTS = ("SUPPORTED", "MISLEADING", "FALSE", "UNVERIFIABLE")
 
 
-def score(claim, since_id):
-    """Verdict and evidence check counts for the newest thread on this claim (posts after since_id)."""
-    posts = [p for p in requests.get(f"{API}/posts", params={"kind": "claim"}).json()
-             if p["body"] == claim and p["id"] > since_id]
-    if not posts:
-        return None
-    cid = posts[-1]["id"]
-    thread = requests.get(f"{API}/posts", params={"reply_to": cid}).json()
-    ok = bad = 0
-    for e in (p for p in thread if p["kind"] == "evidence"):
-        for r in requests.get(f"{API}/posts", params={"reply_to": e["id"]}).json():
-            ok += r["kind"] == "confirm"
-            bad += r["kind"] == "challenge"
-    v = next((p["body"] for p in thread if p["kind"] == "verdict"), "")
-    verdict = next((w for w in VERDICTS if w in v.upper()[:80]), "?")
-    return {"verdict": verdict, "confirmed": ok, "challenged": bad, "thread": cid}
+def score(claims, since_id):
+    """Score the newest thread for each claim posted after since_id."""
+    wanted = set(claims)
+    posts = requests.get(f"{API}/posts", params={"kind": "claim", "since_id": since_id}).json()
+    ids = {p["body"]: p["id"] for p in posts if p["body"] in wanted}
+    if not ids:
+        return {}
+    thread = requests.get(f"{API}/posts", params={"reply_to": list(ids.values())}).json()
+    evidence_ids = [p["id"] for p in thread if p["kind"] == "evidence"]
+    replies = requests.get(f"{API}/posts", params={"reply_to": evidence_ids}).json() if evidence_ids else []
+    by_parent = {}
+    for p in thread + replies:
+        by_parent.setdefault(p["reply_to"], []).append(p)
+    scores = {}
+    for claim, cid in ids.items():
+        posts = by_parent.get(cid, [])
+        ok = bad = 0
+        for e in (p for p in posts if p["kind"] == "evidence"):
+            for r in by_parent.get(e["id"], []):
+                ok += r["kind"] == "confirm"
+                bad += r["kind"] == "challenge"
+        v = next((p["body"] for p in posts if p["kind"] == "verdict"), "")
+        verdict = next((w for w in VERDICTS if w in v.upper()[:80]), "?")
+        scores[claim] = {"verdict": verdict, "confirmed": ok, "challenged": bad, "thread": cid}
+    return scores
 
 
 ap = argparse.ArgumentParser()
@@ -62,8 +71,9 @@ while not os.path.exists(os.path.join(HERE, "stop.txt")):
                         "--parallel", str(len(chunk))], capture_output=True, text=True, encoding="utf-8",
                        errors="ignore")
     summary = []
+    scores = score(chunk, last_id)
     for c in chunk:
-        s = score(c, last_id)
+        s = scores.get(c)
         if not s:
             continue
         st = state.setdefault(c, {"history": [], "status": "new"})

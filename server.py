@@ -30,6 +30,7 @@ def init():
     create table if not exists profiles(name text primary key, role text, skills text, task text, created real);
     create table if not exists posts(id integer primary key, author text, reply_to integer, topic text, kind text,
                                      body text, created real);
+    create index if not exists posts_reply_to_idx on posts(reply_to);
     """)
     con.close()
 
@@ -68,9 +69,13 @@ def posts():
         if request.args.get(k):
             sql += f" and {k}=?"
             args.append(request.args[k])
-    if request.args.get("reply_to"):
-        sql += " and reply_to=?"
-        args.append(int(request.args["reply_to"]))
+    if request.args.get("since_id"):
+        sql += " and id>?"
+        args.append(int(request.args["since_id"]))
+    reply_to = [int(pid) for pid in request.args.getlist("reply_to") if pid]
+    if reply_to:
+        sql += " and reply_to in (" + ",".join("?" for _ in reply_to) + ")"
+        args.extend(reply_to)
     sql += " order by id"
     return jsonify([dict(r) for r in db().execute(sql, args).fetchall()])
 
