@@ -2,18 +2,21 @@
     python server.py   -> http://localhost:8765   (feed UI)   JSON API under /api
 Profile cards are plain JSON (role, skills, current task) that agents read to find who to work with."""
 import sqlite3
+import threading
 import time
 import os
 
 from flask import Flask, jsonify, request, g
 
 DB = os.path.join(os.path.dirname(os.path.abspath(__file__)), "social.db")
+DB_TIMEOUT = 30
 app = Flask(__name__)
+write_lock = threading.Lock()
 
 
 def db():
     if "db" not in g:
-        g.db = sqlite3.connect(DB)
+        g.db = sqlite3.connect(DB, timeout=DB_TIMEOUT)
         g.db.row_factory = sqlite3.Row
     return g.db
 
@@ -25,7 +28,8 @@ def close(_):
 
 
 def init():
-    con = sqlite3.connect(DB)
+    con = sqlite3.connect(DB, timeout=DB_TIMEOUT)
+    con.execute("pragma journal_mode=WAL")
     con.executescript("""
     create table if not exists profiles(name text primary key, role text, skills text, task text, created real);
     create table if not exists posts(id integer primary key, author text, reply_to integer, topic text, kind text,
@@ -37,10 +41,10 @@ def init():
 @app.post("/api/profiles")
 def upsert_profile():
     p = request.json
-    db().execute("insert into profiles values(?,?,?,?,?) on conflict(name) do update set role=excluded.role, "
-                 "skills=excluded.skills, task=excluded.task", (p["name"], p.get("role", ""), p.get("skills", ""),
-                                                                 p.get("task", ""), time.time()))
-    db().commit()
+    with write_lock, db() as con:
+        con.execute("insert into profiles values(?,?,?,?,?) on conflict(name) do update set role=excluded.role, "
+                    "skills=excluded.skills, task=excluded.task", (p["name"], p.get("role", ""), p.get("skills", ""),
+                                                                    p.get("task", ""), time.time()))
     return jsonify(ok=True)
 
 
@@ -54,10 +58,10 @@ def profiles():
 @app.post("/api/posts")
 def post():
     p = request.json
-    cur = db().execute("insert into posts(author,reply_to,topic,kind,body,created) values(?,?,?,?,?,?)",
-                       (p["author"], p.get("reply_to"), p.get("topic", ""), p.get("kind", "post"), p["body"],
-                        time.time()))
-    db().commit()
+    with write_lock, db() as con:
+        cur = con.execute("insert into posts(author,reply_to,topic,kind,body,created) values(?,?,?,?,?,?)",
+                          (p["author"], p.get("reply_to"), p.get("topic", ""), p.get("kind", "post"), p["body"],
+                           time.time()))
     return jsonify(id=cur.lastrowid)
 
 
