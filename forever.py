@@ -17,72 +17,91 @@ import time
 
 import requests
 
+from swarm import MAX_SCOUTS
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 STATE = os.path.join(HERE, "claims_state.json")
 API = os.environ.get("AGENTSOCIAL_API", "http://localhost:8765/api")
 VERDICTS = ("SUPPORTED", "MISLEADING", "FALSE", "UNVERIFIABLE")
 
 
-def score(claim, since_id):
-    """Verdict and evidence check counts for the newest thread on this claim (posts after since_id)."""
-    posts = [p for p in requests.get(f"{API}/posts", params={"kind": "claim"}).json()
-             if p["body"] == claim and p["id"] > since_id]
-    if not posts:
+def score(result):
+    """Score only posts returned by the agents running this claim."""
+    if not isinstance(result, dict):
         return None
-    cid = posts[-1]["id"]
-    thread = requests.get(f"{API}/posts", params={"reply_to": cid}).json()
-    ok = bad = 0
-    for e in (p for p in thread if p["kind"] == "evidence"):
-        for r in requests.get(f"{API}/posts", params={"reply_to": e["id"]}).json():
-            ok += r["kind"] == "confirm"
-            bad += r["kind"] == "challenge"
-    v = next((p["body"] for p in thread if p["kind"] == "verdict"), "")
+    cid = result.get("thread")
+    evidence_ids, check_ids = result.get("evidence_ids"), result.get("check_ids")
+    verdict_id = result.get("verdict_id")
+    valid_id = lambda value: type(value) is int and value > 0
+    if (not valid_id(cid) or not valid_id(verdict_id) or
+            not isinstance(evidence_ids, list) or not isinstance(check_ids, list) or
+            len(evidence_ids) > MAX_SCOUTS or len(check_ids) > MAX_SCOUTS or
+            not all(valid_id(pid) for pid in evidence_ids + check_ids)):
+        return None
+    posts = requests.get(f"{API}/posts", params={"id": evidence_ids + check_ids + [verdict_id],
+                                               "reply_to": [cid] + evidence_ids}).json()
+    evidence = {p["id"] for p in posts if p["id"] in evidence_ids and p["reply_to"] == cid
+                and p["kind"] == "evidence"}
+    checks = [p for p in posts if p["id"] in check_ids and p["reply_to"] in evidence]
+    ok = sum(p["kind"] == "confirm" for p in checks)
+    bad = sum(p["kind"] == "challenge" for p in checks)
+    v = next((p["body"] for p in posts if p["id"] == verdict_id and p["reply_to"] == cid
+              and p["kind"] == "verdict"), "")
     verdict = next((w for w in VERDICTS if w in v.upper()[:80]), "?")
     return {"verdict": verdict, "confirmed": ok, "challenged": bad, "thread": cid}
 
 
-ap = argparse.ArgumentParser()
-ap.add_argument("--batch", type=int, default=10)
-ap.add_argument("--scouts", type=int, default=4)
-ap.add_argument("--max-scouts", type=int, default=8)
-a = ap.parse_args()
-claims = [c.strip() for c in open(os.path.join(HERE, "claims50.txt"), encoding="utf-8") if c.strip()]
-state = json.load(open(STATE, encoding="utf-8")) if os.path.exists(STATE) else {}
-n = 0
-while not os.path.exists(os.path.join(HERE, "stop.txt")):
-    weak = [c for c, s in state.items() if s["status"] == "weak"]
-    fresh = [c for c in claims if c not in state]
-    chunk = (weak + fresh)[:a.batch] or [c for c in claims][:a.batch]
-    scouts = max(min(a.scouts + 2 * len(state.get(c, {}).get("history", [])), a.max_scouts) for c in chunk)
-    path = os.path.join(HERE, "batch.txt")
-    open(path, "w", encoding="utf-8").write("\n".join(chunk) + "\n")
-    last_id = max([p["id"] for p in requests.get(f"{API}/posts").json()] or [0])
-    t0 = time.time()
-    r = subprocess.run([sys.executable, os.path.join(HERE, "swarm.py"), "--claims", path, "--scouts", str(scouts),
-                        "--parallel", str(len(chunk))], capture_output=True, text=True, encoding="utf-8",
-                       errors="ignore")
-    summary = []
-    for c in chunk:
-        s = score(c, last_id)
-        if not s:
-            continue
-        st = state.setdefault(c, {"history": [], "status": "new"})
-        prev = st["history"][-1]["verdict"] if st["history"] else None
-        st["history"].append({"round": n, "scouts": scouts, **s})
-        total = s["confirmed"] + s["challenged"]
-        shaky = s["verdict"] in ("UNVERIFIABLE", "?") or (total and s["challenged"] > total / 2) or \
-            (prev and prev != s["verdict"])
-        # The checker is strict, so most evidence draws a challenge; a verdict that holds across two rounds
-        # with fresh scouts is settled even then. Otherwise retry while shaky, up to 4 attempts.
-        if prev == s["verdict"] and s["verdict"] not in ("UNVERIFIABLE", "?") or len(st["history"]) >= 4:
-            st["status"] = "settled"
-        else:
-            st["status"] = "weak" if shaky else "checked"
-        summary.append(f"  {st['status']:8} {s['verdict']:12} ok={s['confirmed']} challenged={s['challenged']} "
-                       f"(was {prev}) {c[:60]}")
-    json.dump(state, open(STATE, "w", encoding="utf-8"), indent=1)
-    counts = {k: sum(1 for s in state.values() if s["status"] == k) for k in ("settled", "checked", "weak")}
-    with open(os.path.join(HERE, "rounds.log"), "a", encoding="utf-8") as f:
-        f.write(f"round {n} {time.strftime('%H:%M:%S')} {time.time() - t0:.0f}s rc={r.returncode} scouts={scouts} "
-                f"claims={counts}\n" + "\n".join(summary) + f"\n{r.stdout[-400:]}{r.stderr[-300:]}\n")
-    n += 1
+if __name__ == "__main__":
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--batch", type=int, default=10)
+    ap.add_argument("--scouts", type=int, default=4)
+    ap.add_argument("--max-scouts", type=int, default=8)
+    a = ap.parse_args()
+    claims = [c.strip() for c in open(os.path.join(HERE, "claims50.txt"), encoding="utf-8")
+              if c.strip() and not c.strip().startswith("#")]
+    state = json.load(open(STATE, encoding="utf-8")) if os.path.exists(STATE) else {}
+    n = 0
+    while not os.path.exists(os.path.join(HERE, "stop.txt")):
+        weak = [c for c, s in state.items() if s["status"] == "weak" and not c.strip().startswith("#")]
+        fresh = [c for c in claims if c not in state]
+        chunk = (weak + fresh)[:a.batch] or [c for c in claims][:a.batch]
+        scouts = max(min(a.scouts + 2 * len(state.get(c, {}).get("history", [])), a.max_scouts, MAX_SCOUTS)
+                     for c in chunk)
+        path = os.path.join(HERE, "batch.txt")
+        open(path, "w", encoding="utf-8").write("\n".join(chunk) + "\n")
+        t0 = time.time()
+        r = subprocess.run([sys.executable, os.path.join(HERE, "swarm.py"), "--claims", path, "--scouts", str(scouts),
+                            "--parallel", str(len(chunk))], capture_output=True, text=True, encoding="utf-8",
+                           errors="ignore")
+        try:
+            threads = json.loads(r.stdout).get("threads", []) if r.returncode == 0 else []
+        except (ValueError, AttributeError):
+            threads = []
+        if not isinstance(threads, list):
+            threads = []
+        threads = {t["claim"]: t for t in threads if isinstance(t, dict) and isinstance(t.get("claim"), str)}
+        summary = []
+        for c in chunk:
+            s = score(threads.get(c))
+            if not s:
+                continue
+            st = state.setdefault(c, {"history": [], "status": "new"})
+            prev = st["history"][-1]["verdict"] if st["history"] else None
+            st["history"].append({"round": n, "scouts": scouts, **s})
+            total = s["confirmed"] + s["challenged"]
+            shaky = s["verdict"] in ("UNVERIFIABLE", "?") or (total and s["challenged"] > total / 2) or \
+                (prev and prev != s["verdict"])
+            # The checker is strict, so most evidence draws a challenge; a verdict that holds across two rounds
+            # with fresh scouts is settled even then. Otherwise retry while shaky, up to 4 attempts.
+            if prev == s["verdict"] and s["verdict"] not in ("UNVERIFIABLE", "?") or len(st["history"]) >= 4:
+                st["status"] = "settled"
+            else:
+                st["status"] = "weak" if shaky else "checked"
+            summary.append(f"  {st['status']:8} {s['verdict']:12} ok={s['confirmed']} challenged={s['challenged']} "
+                           f"(was {prev}) {c[:60]}")
+        json.dump(state, open(STATE, "w", encoding="utf-8"), indent=1)
+        counts = {k: sum(1 for s in state.values() if s["status"] == k) for k in ("settled", "checked", "weak")}
+        with open(os.path.join(HERE, "rounds.log"), "a", encoding="utf-8") as f:
+            f.write(f"round {n} {time.strftime('%H:%M:%S')} {time.time() - t0:.0f}s rc={r.returncode} scouts={scouts} "
+                    f"claims={counts}\n" + "\n".join(summary) + f"\n{r.stdout[-400:]}{r.stderr[-300:]}\n")
+        n += 1
