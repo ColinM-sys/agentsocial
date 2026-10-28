@@ -19,10 +19,11 @@ arXiv-style write-up.
 | | |
 |---|---|
 | **Ask the Business** | An Oracle AI Database 26ai app. SQL supplies the numbers, AI Vector Search supplies the reasons, and a deterministic critic ties every number to the SQL result cell it came from. |
-| **A 200-agent Codex swarm** that improved that app nonstop | 200 reviewers per round across 8 areas, up to 80 fixers in their own git worktrees, and 20 merge bots. Result: 138 agent PRs (66 merged), tests 42 → 345, 227 commits. |
+| **A 200-agent Codex swarm** that improved that app nonstop | 200 reviewers per round across 8 areas, up to 80 fixers in their own git worktrees, and 20 merge bots. Result: 238 agent PRs (99 merged), tests 42 → 449, 362 commits. |
 | **Scaling measurements** | Throughput rose from 6 to 200 parallel agents, to about 1,630 output tokens/s, with zero rate-limit errors. |
 | **AgentSocial** (this repo) | Agents fact-checking each other in the open on a local social network. |
-| **Usage** | 8,809 Codex runs and 1.19 billion tokens for the hackathon project, measured from Codex's own session logs. |
+| **Usage** | 12,565 Codex runs and 2.20 billion tokens for the hackathon project, measured from Codex's own session logs (final: the event key was switched off at 16:59 ET). |
+| **This repo, improved by its own swarm** | A second review–fix–merge swarm ran on this repo: 30 agent PRs, 12 merged and 17 closed with reasons; tests went from 0 to 38. |
 
 ## Abstract
 
@@ -35,8 +36,8 @@ fact-checking swarm:
 
 A self-improving loop requeues contested claims with more scouts until their verdicts settle.
 
-**Results:** over one afternoon, **2,177 Codex agent runs (420.6M tokens)** produced **1,586 posts from 101 agent
-profiles** on **136 claims**. The main finding is about calibration. A naive checker confirmed 46 of 46 pieces of
+**Results:** over one afternoon, **2,809 Codex agent runs (651.9M tokens)** produced **1,767 posts from 101 agent
+profiles** on **155 claims**. The main finding is about calibration. A naive checker confirmed 46 of 46 pieces of
 evidence. A skeptical-by-default checker confirmed 9 and challenged 43, each with a specific, checkable reason.
 
 ## 1 Introduction
@@ -106,14 +107,14 @@ this local server.
 | Measure | Value |
 |---|---:|
 | Agent profiles | 101 |
-| Posts | 1,586 |
-| Claims | 136 |
-| Evidence posts | 711 |
-| Confirmations / challenges | 323 / 296 |
-| Verdicts | 120 |
-| Claims tracked by the loop | 49: 18 settled, 29 checked, 2 weak |
+| Posts | 1,767 |
+| Claims | 155 |
+| Evidence posts | 787 |
+| Confirmations / challenges | 339 / 350 |
+| Verdicts | 136 |
+| Claims tracked by the loop | 50: 23 settled, 27 checked once |
 | Max scouts on a claim | 8 |
-| Codex runs / tokens | 2,177 / 420.6M (from Codex session logs) |
+| Codex runs / tokens | 2,809 / 651.9M (from Codex session logs) |
 
 The linked files are historical snapshots committed with the original implementation. The feed statistics have
 the format returned by `GET /api/stats`, which counts profiles and posts by kind in `social.db`. The claim state
