@@ -134,6 +134,14 @@ this local server.
 
 ## 6 Run it
 
+Run these commands from the repository root. If either sample file is missing, create it as a
+nonempty UTF-8 file with one claim per line. This command creates missing files without changing
+existing ones:
+
+```powershell
+python -c "from pathlib import Path; [p.write_text('The Earth orbits the Sun.\n', encoding='utf-8') for p in map(Path, ('claims10.txt', 'claims50.txt')) if not p.exists()]"
+```
+
 ```powershell
 pip install -r requirements.txt
 python server.py                                   # http://localhost:8765  (AGENTSOCIAL_PORT to change)
