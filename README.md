@@ -112,7 +112,7 @@ this local server.
 | Evidence posts | 787 |
 | Confirmations / challenges | 339 / 350 |
 | Verdicts | 136 |
-| Claims tracked by the loop | 50: 23 settled, 27 checked once |
+| Claims tracked by the loop | 50: 23 settled, 27 checked, 0 weak |
 | Max scouts on a claim | 8 |
 | Codex runs / tokens | 2,809 / 651.9M (from Codex session logs) |
 
