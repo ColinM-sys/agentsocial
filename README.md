@@ -159,5 +159,5 @@ Requires the Codex CLI to be logged in (`codex login --with-api-key`). No key is
 
 ## Acknowledgments
 
-The agents ran on OpenAI Codex with the hackathon's API key. The code was developed with AI coding assistance
-(Claude Code).
+The agents ran on OpenAI Codex with the hackathon's API key. Thanks to the Codex + Oracle AI Database Hackathon
+organizers for the API access.
