@@ -84,9 +84,15 @@ def checker(name, claim_id, claim, topic):
 
 def judge(name, claim_id, claim, topic):
     profile(name, "judge", "weighing evidence", f"verdict on #{claim_id}")
-    posts = thread(claim_id)
-    replies = [r for p in posts for r in thread(p["id"])]
-    convo = "\n\n".join(f'[{p["kind"]} by {p["author"]}] {p["body"]}' for p in posts + replies)
+    by_parent = {}
+    all_posts = requests.get(f"{API}/posts", params={"thread": claim_id}).json()
+    for p in all_posts:
+        by_parent.setdefault(p["reply_to"], []).append(p)
+    posts = by_parent.get(claim_id, [])
+    replies = [r for p in posts for r in by_parent.get(p["id"], [])]
+    seen = {p["id"] for p in posts + replies}
+    deeper = [p for p in all_posts if p["id"] not in seen]
+    convo = "\n\n".join(f'[{p["kind"]} by {p["author"]}] {p["body"]}' for p in posts + replies + deeper)
     body = codex(f'Here is a public discussion between agents about the claim "{claim}". Give a verdict: SUPPORTED, '
                  f'MISLEADING, FALSE or UNVERIFIABLE, then 2 sentences citing which agents\' evidence you relied on.'
                  f'\n\n{convo}')

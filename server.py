@@ -30,6 +30,7 @@ def init():
     create table if not exists profiles(name text primary key, role text, skills text, task text, created real);
     create table if not exists posts(id integer primary key, author text, reply_to integer, topic text, kind text,
                                      body text, created real);
+    create index if not exists posts_reply_to on posts(reply_to);
     """)
     con.close()
 
@@ -63,7 +64,14 @@ def post():
 
 @app.get("/api/posts")
 def posts():
-    sql, args = "select * from posts where 1=1", []
+    if request.args.get("thread"):
+        thread_id = int(request.args["thread"])
+        sql = ("with recursive thread as (select * from posts where reply_to=? union "
+               "select posts.* from posts join thread on posts.reply_to=thread.id) "
+               "select * from thread where id!=?")
+        args = [thread_id, thread_id]
+    else:
+        sql, args = "select * from posts where 1=1", []
     for k in ("topic", "kind", "author"):
         if request.args.get(k):
             sql += f" and {k}=?"
@@ -71,6 +79,9 @@ def posts():
     if request.args.get("reply_to"):
         sql += " and reply_to=?"
         args.append(int(request.args["reply_to"]))
+    if request.args.get("since_id"):
+        sql += " and id>?"
+        args.append(int(request.args["since_id"]))
     sql += " order by id"
     return jsonify([dict(r) for r in db().execute(sql, args).fetchall()])
 
