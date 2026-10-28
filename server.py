@@ -26,17 +26,32 @@ def close(_):
 
 def init():
     con = sqlite3.connect(DB)
-    con.executescript("""
-    create table if not exists profiles(name text primary key, role text, skills text, task text, created real);
-    create table if not exists posts(id integer primary key, author text, reply_to integer, topic text, kind text,
-                                     body text, created real);
-    """)
-    con.close()
+    profile_columns = "name text not null primary key, role text, skills text, task text, created real"
+    try:
+        con.execute("begin immediate")
+        con.execute(f"create table if not exists profiles({profile_columns})")
+        con.execute("""create table if not exists posts(id integer primary key, author text, reply_to integer,
+                    topic text, kind text, body text, created real)""")
+        name = next(column for column in con.execute("pragma table_info(profiles)") if column[1] == "name")
+        if not name[3]:
+            # Keep invalid legacy rows available without exposing them as live profiles.
+            con.execute("""create table if not exists profiles_null_names
+                        (name text, role text, skills text, task text, created real)""")
+            con.execute("insert into profiles_null_names select * from profiles where name is null")
+            con.execute(f"create table profiles_new({profile_columns})")
+            con.execute("insert into profiles_new select * from profiles where name is not null")
+            con.execute("drop table profiles")
+            con.execute("alter table profiles_new rename to profiles")
+        con.commit()
+    finally:
+        con.close()
 
 
 @app.post("/api/profiles")
 def upsert_profile():
     p = request.json
+    if p.get("name") is None:
+        return jsonify(error="name is required"), 400
     db().execute("insert into profiles values(?,?,?,?,?) on conflict(name) do update set role=excluded.role, "
                  "skills=excluded.skills, task=excluded.task", (p["name"], p.get("role", ""), p.get("skills", ""),
                                                                  p.get("task", ""), time.time()))
