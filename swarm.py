@@ -8,6 +8,7 @@ Agents are Codex runs (event key via Codex's own login)."""
 import argparse
 import json
 import os
+import re
 import shutil
 import subprocess
 import time
@@ -21,27 +22,46 @@ CODEX = [shutil.which("node"), os.path.join(os.environ["APPDATA"], "npm", "node_
 TOKENS = {"in": 0, "out": 0, "calls": 0}
 
 
+class AgentRunError(Exception):
+    pass
+
+
 def codex(prompt, web=False):
     args = CODEX + ["exec", "--skip-git-repo-check", "-s", "read-only", "--json",
                     "-c", "mcp_servers.sqlcl.enabled=false"]  # no per-agent SQLcl JVM
     if web:
         args += ["-c", "tools.web_search=true"]
-    r = subprocess.run(args + [prompt], stdin=subprocess.DEVNULL, capture_output=True, text=True, encoding="utf-8",
-                       errors="ignore", timeout=900)
+    try:
+        r = subprocess.run(args + [prompt], stdin=subprocess.DEVNULL, capture_output=True, text=True, encoding="utf-8",
+                           errors="ignore", timeout=900)
+    except subprocess.TimeoutExpired as e:
+        raise AgentRunError("Agent run timed out") from e
+    if r.returncode != 0:
+        raise AgentRunError(f"Agent run failed with exit status {r.returncode}")
     text = ""
     for line in r.stdout.splitlines():
         try:
             m = json.loads(line)
         except ValueError:
             continue
-        if m.get("type") == "item.completed" and m["item"].get("type") == "agent_message":
-            text = m["item"]["text"]
+        if not isinstance(m, dict):
+            continue
+        item = m.get("item")
+        if (m.get("type") == "item.completed" and isinstance(item, dict) and
+                item.get("type") == "agent_message" and isinstance(item.get("text"), str)):
+            text = item["text"]
         if m.get("type") == "turn.completed":
             u = m.get("usage", {})
+            if not isinstance(u, dict) or not all(isinstance(u.get(k, 0), int)
+                                                  for k in ("input_tokens", "output_tokens")):
+                continue
             TOKENS["in"] += u.get("input_tokens", 0)
             TOKENS["out"] += u.get("output_tokens", 0)
             TOKENS["calls"] += 1
-    return text.strip()
+    text = text.strip()
+    if not text:
+        raise AgentRunError("Agent run produced no message")
+    return text
 
 
 def profile(name, role, skills, task):
@@ -79,7 +99,10 @@ def checker(name, claim_id, claim, topic):
                      f'only if every quote is verbatim on its page AND directly supports the point, and then quote the '
                      f'sentence you found. Otherwise reply CHALLENGE and name the specific problem. Under 100 words, '
                      f'starting with CONFIRMED or CHALLENGE.\n\n{e["body"]}', web=True)
-        post(name, body, topic, "challenge" if body.upper().startswith("CHALLENGE") else "confirm", e["id"])
+        result = re.match(r"^(CONFIRMED|CHALLENGE)\b", body, re.IGNORECASE)
+        if not result:
+            raise AgentRunError("Checker did not provide a confirmation or challenge")
+        post(name, body, topic, "challenge" if result.group(1).upper() == "CHALLENGE" else "confirm", e["id"])
 
 
 def judge(name, claim_id, claim, topic):
@@ -96,11 +119,14 @@ def judge(name, claim_id, claim, topic):
 def run_claim(i, claim, scouts):
     topic = f"claim-{i}"
     cid = post("lead", claim, topic, "claim")
-    with ThreadPoolExecutor(scouts) as ex:
-        list(ex.map(lambda k: scout(f"scout-{i}-{k}", cid, claim, topic, "supporting" if k % 2 == 0 else "against"),
-                    range(scouts)))
-    checker(f"checker-{i}", cid, claim, topic)
-    judge(f"judge-{i}", cid, claim, topic)
+    try:
+        with ThreadPoolExecutor(scouts) as ex:
+            list(ex.map(lambda k: scout(f"scout-{i}-{k}", cid, claim, topic, "supporting" if k % 2 == 0 else "against"),
+                        range(scouts)))
+        checker(f"checker-{i}", cid, claim, topic)
+        judge(f"judge-{i}", cid, claim, topic)
+    except AgentRunError as e:
+        post("lead", f"Claim failed: {e}", topic, "failure", cid)
 
 
 if __name__ == "__main__":
