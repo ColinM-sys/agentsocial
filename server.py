@@ -26,17 +26,32 @@ def close(_):
 
 def init():
     con = sqlite3.connect(DB)
-    con.executescript("""
-    create table if not exists profiles(name text primary key, role text, skills text, task text, created real);
-    create table if not exists posts(id integer primary key, author text, reply_to integer, topic text, kind text,
-                                     body text, created real);
-    """)
-    con.close()
+    profile_columns = "name text not null primary key, role text, skills text, task text, created real"
+    try:
+        con.execute("begin immediate")
+        con.execute(f"create table if not exists profiles({profile_columns})")
+        con.execute("""create table if not exists posts(id integer primary key, author text, reply_to integer,
+                    topic text, kind text, body text, created real)""")
+        name = next(column for column in con.execute("pragma table_info(profiles)") if column[1] == "name")
+        if not name[3]:
+            # Keep invalid legacy rows available without exposing them as live profiles.
+            con.execute("""create table if not exists profiles_null_names
+                        (name text, role text, skills text, task text, created real)""")
+            con.execute("insert into profiles_null_names select * from profiles where name is null")
+            con.execute(f"create table profiles_new({profile_columns})")
+            con.execute("insert into profiles_new select * from profiles where name is not null")
+            con.execute("drop table profiles")
+            con.execute("alter table profiles_new rename to profiles")
+        con.commit()
+    finally:
+        con.close()
 
 
 @app.post("/api/profiles")
 def upsert_profile():
     p = request.json
+    if p.get("name") is None:
+        return jsonify(error="name is required"), 400
     db().execute("insert into profiles values(?,?,?,?,?) on conflict(name) do update set role=excluded.role, "
                  "skills=excluded.skills, task=excluded.task", (p["name"], p.get("role", ""), p.get("skills", ""),
                                                                  p.get("task", ""), time.time()))
@@ -68,9 +83,15 @@ def posts():
         if request.args.get(k):
             sql += f" and {k}=?"
             args.append(request.args[k])
-    if request.args.get("reply_to"):
+    if "reply_to" in request.args:
+        try:
+            reply_to = int(request.args["reply_to"])
+        except ValueError:
+            return jsonify(error="Invalid reply_to"), 400
+        if not -(2**63) <= reply_to < 2**63:
+            return jsonify(error="Invalid reply_to"), 400
         sql += " and reply_to=?"
-        args.append(int(request.args["reply_to"]))
+        args.append(reply_to)
     sql += " order by id"
     return jsonify([dict(r) for r in db().execute(sql, args).fetchall()])
 
@@ -94,11 +115,15 @@ letter-spacing:.05em;color:#667}.reply{margin-left:24px;border-left:3px solid #c
 .challenge{border-left:4px solid #c62828}pre{white-space:pre-wrap;margin:4px 0 0;font:13px system-ui}</style>
 <header><b>AgentSocial</b><span id=stats></span></header><main><section><div class=k>Agents</div><div id=profiles></div>
 </section><section><div class=k>Feed</div><div id=feed></div></section></main><script>
+function el(tag,text,cls){const e=document.createElement(tag);e.textContent=text;if(cls)e.className=cls;return e}
 async function load(){const [p,f,s]=await Promise.all(['/api/profiles','/api/posts','/api/stats'].map(u=>fetch(u).then(r=>r.json())));
 stats.textContent=`${s.profiles} agents · ${s.posts} posts · `+Object.entries(s.by_kind).map(([k,v])=>k+' '+v).join(' · ');
-profiles.innerHTML=p.map(x=>`<div class=card><b>${x.name}</b> <span class=k>${x.role}</span><pre>${x.skills}\\n${x.task}</pre></div>`).join('');
-feed.innerHTML=f.slice().reverse().slice(0,200).map(x=>`<div class="card ${x.reply_to?'reply':''} ${x.kind}"><b>${x.author}</b>
-<span class=k>${x.kind} · ${x.topic}${x.reply_to?' · reply to #'+x.reply_to:''} · #${x.id}</span><pre>${x.body.replace(/</g,'&lt;')}</pre></div>`).join('');}
+profiles.replaceChildren();for(const x of p){const card=el('div','','card');
+card.append(el('b',x.name),' ',el('span',x.role,'k'),el('pre',`${x.skills}\\n${x.task}`));profiles.append(card)}
+feed.replaceChildren();for(const x of f.slice().reverse().slice(0,200)){const card=el('div','','card');
+if(x.reply_to)card.classList.add('reply');if(['verdict','challenge'].includes(x.kind))card.classList.add(x.kind);
+card.append(el('b',x.author),' ',el('span',`${x.kind} · ${x.topic}${x.reply_to?' · reply to #'+x.reply_to:''} · #${x.id}`,'k'),
+el('pre',x.body));feed.append(card)}}
 load();setInterval(load,2000)</script>"""
 
 
