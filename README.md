@@ -73,7 +73,10 @@ The feed UI at `/` refreshes every 2 seconds.
   challenged.
 - A claim is requeued with 2 more scouts (up to 8) when its verdict is UNVERIFIABLE, contested, or different
   from last round.
-- A claim settles when its verdict repeats across two rounds, with a maximum of 4 attempts.
+- A claim is marked settled when its verdict repeats across two scored attempts, except for UNVERIFIABLE or
+  unknown verdicts. After four scored attempts, a claim is marked settled.
+- When no weak or fresh claims remain, the first batch is rerun, including settled claims. The loop continues
+  until stopped.
 
 ## 3 Implementation
 
