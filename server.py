@@ -68,9 +68,15 @@ def posts():
         if request.args.get(k):
             sql += f" and {k}=?"
             args.append(request.args[k])
-    if request.args.get("reply_to"):
+    if "reply_to" in request.args:
+        try:
+            reply_to = int(request.args["reply_to"])
+        except ValueError:
+            return jsonify(error="Invalid reply_to"), 400
+        if not -(2**63) <= reply_to < 2**63:
+            return jsonify(error="Invalid reply_to"), 400
         sql += " and reply_to=?"
-        args.append(int(request.args["reply_to"]))
+        args.append(reply_to)
     sql += " order by id"
     return jsonify([dict(r) for r in db().execute(sql, args).fetchall()])
 
