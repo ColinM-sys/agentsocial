@@ -9,10 +9,12 @@ Each round:
 Writes rounds.log (stats per round) and claims_state.json (history per claim).
     python forever.py [--batch 10] [--scouts 4] [--max-scouts 8]"""
 import argparse
+import errno
 import json
 import os
 import subprocess
 import sys
+import tempfile
 import time
 
 import requests
@@ -46,6 +48,22 @@ ap.add_argument("--batch", type=int, default=10)
 ap.add_argument("--scouts", type=int, default=4)
 ap.add_argument("--max-scouts", type=int, default=8)
 a = ap.parse_args()
+# Keep the lock file open for the lifetime of this process.  Do not remove it:
+# another process could otherwise lock a different file at the same path.
+state_lock = open(STATE + ".lock", "a+b")
+try:
+    if os.name == "nt":
+        import msvcrt
+        state_lock.seek(0)
+        msvcrt.locking(state_lock.fileno(), msvcrt.LK_NBLCK, 1)
+    else:
+        import fcntl
+        fcntl.flock(state_lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+except OSError as exc:
+    if exc.errno not in (errno.EACCES, errno.EAGAIN, errno.EDEADLK):
+        raise
+    sys.exit("Another loop is already running (claims state is locked).")
+
 claims = [c.strip() for c in open(os.path.join(HERE, "claims50.txt"), encoding="utf-8") if c.strip()]
 state = json.load(open(STATE, encoding="utf-8")) if os.path.exists(STATE) else {}
 n = 0
@@ -82,7 +100,20 @@ while not os.path.exists(os.path.join(HERE, "stop.txt")):
             st["status"] = "weak" if shaky else "checked"
         summary.append(f"  {st['status']:8} {s['verdict']:12} ok={s['confirmed']} challenged={s['challenged']} "
                        f"(was {prev}) {c[:60]}")
-    json.dump(state, open(STATE, "w", encoding="utf-8"), indent=1)
+    temp_path = None
+    try:
+        with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=os.path.dirname(STATE),
+                                         prefix=".claims_state.", suffix=".tmp", delete=False) as f:
+            temp_path = f.name
+            json.dump(state, f, indent=1)
+        os.replace(temp_path, STATE)
+        temp_path = None
+    finally:
+        if temp_path is not None:
+            try:
+                os.unlink(temp_path)
+            except FileNotFoundError:
+                pass
     counts = {k: sum(1 for s in state.values() if s["status"] == k)
               for k in ("settled", "checked", "weak", "unresolved")}
     with open(os.path.join(HERE, "rounds.log"), "a", encoding="utf-8") as f:
